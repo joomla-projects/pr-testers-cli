@@ -98,12 +98,11 @@ GQL;
             }
 
             $output->writeln(\sprintf(
-                "Found %d PRs in %s/%s with milestone '%s' and keyword '%s':",
+                "Found %d PRs in %s/%s with milestone '%s':",
                 \count($data->data->search->nodes),
                 $owner,
                 $repo,
-                $milestone,
-                implode(', ', $keywords)
+                $milestone
             ));
 
             $count = 0;
