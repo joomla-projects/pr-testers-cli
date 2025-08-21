@@ -46,7 +46,7 @@ class GithubCommentsCli extends AbstractCommand
         $mergedSince = null !== $input->getOption('merged-since') ? $input->getOption('merged-since') : null;
 
         // Validate date filter if present
-        if ($mergedSince && !\DateTime::createFromFormat('Y-m-d', $mergedSince)) {
+        if ($mergedSince && (!($date = \DateTime::createFromFormat('Y-m-d', $mergedSince)) || $date->format('Y-m-d') !== $mergedSince)) {
             $output->writeln('<error>Invalid date format for --merged-since. Please use YYYY-MM-DD.</error>');
             return 1;
         }
