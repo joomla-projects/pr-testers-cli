@@ -150,19 +150,20 @@ GQL;
         // Write markdown output
         $md = "## :technologist: Test contributions\n\n";
         $md .= "Thank you to all the testers who help us maintain high quality standards and deliver a robust product.\n\n";
-        $mdFull = $md;
+        $mdFull          = $md;
+        $contributorList = [];
         // Output collected comments
         foreach ($collected as $author => $comments) {
-            $countTests = \count($comments);
-            $md .= "- @{$author} ({$countTests})\n";
+            $countTests        = \count($comments);
+            $contributorList[] = "@{$author} ({$countTests})";
             $mdFull .= "- @{$author} ({$countTests})\n";
             $output->writeln(\sprintf("Tests by %s:", $author));
             foreach ($comments as $comment) {
                 $mdFull .= "    - PR #{$comment['pr']}: {$comment['title']}\n";
                 $output->writeln(\sprintf(" - PR #%d: %s", $comment['pr'], $comment['title']));
-                // $output->writeln(sprintf("   Comment: %s", $comment['comment']));
             }
         }
+        $md .= implode(', ', $contributorList) . "\n";
 
         file_put_contents(__DIR__ . '/../collaborator-tester.md', $md);
         file_put_contents(__DIR__ . '/../collaborator-tester-full.md', $mdFull);
