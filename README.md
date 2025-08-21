@@ -6,6 +6,7 @@ The `github-pr-comments` CLI command fetches merged pull request comments from a
 
 ### Key Features
 - Fetches only **merged PRs** for a specific repository, base branch, and milestone.
+- Optional **date filter** (`--merged-since`): include only PRs merged on or after a given `YYYY-MM-DD` date.
 - Supports **keyword filtering**, requiring one or more phrases to appear in each comment.  
 - Collects and groups comments by **author**, ensuring each PR is listed once per tester.  
 - Outputs results to the console and writes a **`collaborator-tester.md`** markdown file.  
@@ -50,9 +51,13 @@ The `github-pr-comments` CLI command fetches merged pull request comments from a
      --repo=your_repo \
      --base=main \
      --milestone=v1.0.0 \
+     --merged-since=2023-01-01 \
      --keyword="I have tested this item" \
      --keyword="OK to merge"
    ```
+
+  > [!TIP]
+  > The `merged-since` date filter is optional and especially useful if you have a milestone with multiple releases (alpha, beta, etc.) and want to reflect the tests accurately.
 
 ## How it works
 
@@ -66,7 +71,7 @@ The `github-pr-comments` CLI command fetches merged pull request comments from a
 ## Example
 
 ```bash
-php cli/github-pr-comments.php --milestone=v1.0.0 --keyword="tested" --keyword="LGTM"
+php cli/github-pr-comments.php --merged-since=2023-01-01 --milestone=v1.0.0 --keyword="tested" --keyword="LGTM"
 ```
 
 Get a list of all possible options:
