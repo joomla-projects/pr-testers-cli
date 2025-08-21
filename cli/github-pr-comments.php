@@ -111,8 +111,9 @@ GQL;
                 return 1;
             }
 
-            $outputResults = ($mergedSince) ? 
-                \sprintf("Found %d PRs merged since %s in %s/%s with milestone '%s':",
+            $outputResults = ($mergedSince) ?
+                \sprintf(
+                    "Found %d PRs merged since %s in %s/%s with milestone '%s':",
                     \count($data->data->search->nodes),
                     $mergedSince,
                     $owner,
