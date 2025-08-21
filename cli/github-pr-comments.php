@@ -154,15 +154,15 @@ GQL;
         // Output collected comments
         foreach ($collected as $author => $comments) {
             $countTests = \count($comments);
-            $md .= "- @{$author} ({$countTests})\n";
+            $md .= "@{$author} ({$countTests}), ";
             $mdFull .= "- @{$author} ({$countTests})\n";
             $output->writeln(\sprintf("Tests by %s:", $author));
             foreach ($comments as $comment) {
                 $mdFull .= "    - PR #{$comment['pr']}: {$comment['title']}\n";
                 $output->writeln(\sprintf(" - PR #%d: %s", $comment['pr'], $comment['title']));
-                // $output->writeln(sprintf("   Comment: %s", $comment['comment']));
             }
         }
+        $md = rtrim($md, ', ') . "\n";
 
         file_put_contents(__DIR__ . '/../collaborator-tester.md', $md);
         file_put_contents(__DIR__ . '/../collaborator-tester-full.md', $mdFull);
