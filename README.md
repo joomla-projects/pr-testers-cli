@@ -92,5 +92,4 @@ php cli/github-pr-comments.php github-pr-comments --help
   > ## :technologist: Test contributions
   > Thank you to all the testers who help us maintain high quality standards and deliver a robust product.
   > 
-  > - @alice (2)
-  > - @bob (1)
+  > @alice (2), @bob (1)
