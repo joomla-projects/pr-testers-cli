@@ -32,15 +32,25 @@ class GithubCommentsCli extends AbstractCommand
         $this->getDefinition()->addOption(
             new InputOption('keyword', null, InputOption::VALUE_REQUIRED | InputOption::VALUE_IS_ARRAY, 'Filter keyword(s)')
         );
+        // Date filter for merged PRs (optional)
+        $this->getDefinition()->addOption(new InputOption('merged-since', null, InputOption::VALUE_OPTIONAL, 'Date filter for merged PRs (YYYY-MM-DD)'));
     }
 
     protected function doExecute(InputInterface $input, OutputInterface $output): int
     {
-        $token     = null !== $input->getOption('token') ? $input->getOption('token') : $_ENV['GITHUB_TOKEN'] ?? null;
-        $owner     = null !== $input->getOption('owner') ? $input->getOption('owner') : $_ENV['GITHUB_OWNER'] ?? null;
-        $repo      = null !== $input->getOption('repo') ? $input->getOption('repo') : $_ENV['GITHUB_REPO'] ?? null;
-        $base      = null !== $input->getOption('base') ? $input->getOption('base') : $_ENV['GITHUB_BASE'] ?? '6.0-dev';
-        $milestone = null !== $input->getOption('milestone') ? $input->getOption('milestone') : $_ENV['GITHUB_MILESTONE'] ?? 'Joomla! 6.0.0';
+        $token       = null !== $input->getOption('token') ? $input->getOption('token') : $_ENV['GITHUB_TOKEN'] ?? null;
+        $owner       = null !== $input->getOption('owner') ? $input->getOption('owner') : $_ENV['GITHUB_OWNER'] ?? null;
+        $repo        = null !== $input->getOption('repo') ? $input->getOption('repo') : $_ENV['GITHUB_REPO'] ?? null;
+        $base        = null !== $input->getOption('base') ? $input->getOption('base') : $_ENV['GITHUB_BASE'] ?? '6.0-dev';
+        $milestone   = null !== $input->getOption('milestone') ? $input->getOption('milestone') : $_ENV['GITHUB_MILESTONE'] ?? 'Joomla! 6.0.0';
+        $mergedSince = null !== $input->getOption('merged-since') ? $input->getOption('merged-since') : null;
+
+        // Validate date filter if present
+        if ($mergedSince && (!($date = \DateTime::createFromFormat('Y-m-d', $mergedSince)) || $date->format('Y-m-d') !== $mergedSince)) {
+            $output->writeln('<error>Invalid date format for --merged-since. Please use YYYY-MM-DD.</error>');
+            return 1;
+        }
+
         // Build keywords list: use CLI options if provided, otherwise env
         $cliKeywords = $input->getOption('keyword');
         if (\is_array($cliKeywords) && \count($cliKeywords) > 0) {
@@ -83,6 +93,10 @@ GQL;
         do {
             // Build search string including milestone
             $queryString = \sprintf('repo:%s/%s is:pr is:merged base:%s milestone:"%s"', $owner, $repo, $base, $milestone);
+            // Add date filter if provided
+            if ($mergedSince) {
+                $queryString .= ' merged:>=' . $mergedSince;
+            }
             $payload     = ['query' => $query, 'variables' => ['queryString' => $queryString, 'after' => $after]];
             $response    = $client->post('https://api.github.com/graphql', json_encode($payload));
             $data        = json_decode($response->getBody());
@@ -97,15 +111,24 @@ GQL;
                 return 1;
             }
 
-            $output->writeln(\sprintf(
-                "Found %d PRs in %s/%s with milestone '%s':",
-                \count($data->data->search->nodes),
-                $owner,
-                $repo,
-                $milestone
-            ));
+            $outputResults = ($mergedSince) ?
+                \sprintf(
+                    "Found %d PRs merged since %s in %s/%s with milestone '%s':",
+                    \count($data->data->search->nodes),
+                    $mergedSince,
+                    $owner,
+                    $repo,
+                    $milestone
+                ) : \sprintf(
+                    "Found %d PRs in %s/%s with milestone '%s':",
+                    \count($data->data->search->nodes),
+                    $owner,
+                    $repo,
+                    $milestone
+                );
 
-            $count = 0;
+            $output->writeln($outputResults);
+
             foreach ($data->data->search->nodes as $pr) {
 
                 foreach ($pr->comments->nodes as $comment) {
@@ -160,7 +183,6 @@ GQL;
             foreach ($comments as $comment) {
                 $mdFull .= "    - PR #{$comment['pr']}: {$comment['title']}\n";
                 $output->writeln(\sprintf(" - PR #%d: %s", $comment['pr'], $comment['title']));
-                // $output->writeln(sprintf("   Comment: %s", $comment['comment']));
             }
         }
 
